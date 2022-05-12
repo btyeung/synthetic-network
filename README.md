@@ -28,9 +28,11 @@ create-synthetic-network: synthetic-network # Create Docker network: synthetic-n
 ```
 
 ### Run Chrome using Synthetic Network in VNC
+
 1. ensure Docker for Mac/Windows/Linux is running
 
 2.
+
 ```
 $ make create-synthetic-network # You only need to do this once
 $ make run-chrome
@@ -40,6 +42,7 @@ $ make run-chrome
 📺 Point your VNC client at localhost:5901
 ...
 ```
+
 3. open TigerVNC and navigate to 127.0.0.1::5901
 
 #### Resolving test domains within the container
@@ -52,43 +55,51 @@ $ TESTHOST=my-test-domain.dev:192.168.0.1 make run-chrome
 
 Build `syntheticnet` image
 
-```$ make image```
+`$ make image`
 
 with VNC:
 
-```$ make image-vnc```
+`$ make image-vnc`
 
 ## Scripting the Synthetic Network
 
 ```js
-const SyntheticNetwork = require('synthetic-network/frontend')
+const SyntheticNetwork = require("synthetic-network/frontend");
 
-const synthnet = new SyntheticNetwork({hostname: "localhost", port: 3000})
+const synthnet = new SyntheticNetwork({ hostname: "localhost", port: 3000 });
 
-await synthnet.get() // Get current configuration
+await synthnet.get(); // Get current configuration
 
 // Double ingress rate
-var current_ingress_rate = synthnet.default_link.ingress.rate()
-synthnet.default_link.ingress.rate(current_ingress_rate*2)
+var current_ingress_rate = synthnet.default_link.ingress.rate();
+synthnet.default_link.ingress.rate(current_ingress_rate * 2);
 
-await synthnet.commit() // Apply new configuration
+await synthnet.commit(); // Apply new configuration
 
 // Add a flow
-synthnet.addFlow('udp', {protocol: 'udp'})
-synthnet.flows.udp.link.ingress.rate(500000)
-synthnet.flows.udp.link.egress.rate(500000)
-synthnet.flows.udp.link.egress.loss(0.01)
-await synthnet.commit()
+synthnet.addFlow("udp", { protocol: "udp" });
+synthnet.flows.udp.link.ingress.rate(500000);
+synthnet.flows.udp.link.egress.rate(500000);
+synthnet.flows.udp.link.egress.loss(0.01);
+await synthnet.commit();
 
 // Print ingress traffic statistics
-const ingress_profile = await synthnet.profiles.ingress.get()
+const ingress_profile = await synthnet.profiles.ingress.get();
 for (var flow in ingress_profile.flows)
-  console.log(flow, ingress_profile.flows[flow].packets)
+  console.log(flow, ingress_profile.flows[flow].packets);
 
 // ...
 ```
 
 See also: [`frontend/udp_rate_sine_demo.js`](frontend/udp_rate_sine_demo.js)
+
+## Known Issues
+
+- Web GUI does NOT work with firefox
+
+## Possible Enhancements
+
+- DB driven (likely local) config for stateful runs
 
 ## Further reading
 
