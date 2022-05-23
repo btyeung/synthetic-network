@@ -1,8 +1,16 @@
-DOCKER ?= docker
+DOCKER ?= docker 
 SYNTHETIC_NETWORK ?= 10.77.0.0/16
 CONTAINER_NAME_INTERACTIVE ?= syntheticnet-interactive
 CONTAINER_NAME_CHROME ?= syntheticnet-chrome
 TESTHOST ?= ''
+
+#chrome image name (custom)
+#registry.int.byeung.com/180sc/syntheticnet:chrome-usb
+#IMAGE_CHROME ?= syntheticnet:chrome
+
+#TODO: default this to another repository to a non specific image
+IMAGE_CHROME ?= registry.int.byeung.com/180sc/syntheticnet:chrome-usb
+
 
 help: # Print this help message
 	$(info SYNTHETIC_NETWORK ?= ${SYNTHETIC_NETWORK})
@@ -45,6 +53,27 @@ run-chrome: image-chrome synthetic-network # Run syntheticnet:chrome. Prereq: cr
 	        --tty --interactive \
 		$(shell [ -n $(TESTHOST) ] && echo '--add-host="$(TESTHOST)"') \
 		syntheticnet:chrome
+	$(DOCKER) network connect synthetic-network $(CONTAINER_NAME_CHROME)
+	@echo
+	@echo "🎛 Synthetic network GUI will listen on http://localhost:3000"
+	@echo
+	@echo "📺 Point your VNC client at localhost:5901"
+	@echo
+	$(DOCKER) start --attach --interactive $(CONTAINER_NAME_CHROME)
+
+#TODO: move this out when ready
+run-chrome-full: image-chrome synthetic-network # Run syntheticnet:chrome. Prereq: create-synthetic-network
+	$(DOCKER) rm $(CONTAINER_NAME_CHROME) || true
+	$(DOCKER) create --privileged \
+		--env SYNTHETIC_NETWORK=$(SYNTHETIC_NETWORK) \
+		--publish 3000:80 \
+		--publish 5901:5901 \
+		--device=/dev/video0 \
+		--device=/dev/video1 \
+		--name $(CONTAINER_NAME_CHROME) \
+	        --tty --interactive \
+		$(shell [ -n $(TESTHOST) ] && echo '--add-host="$(TESTHOST)"') \
+		$(IMAGE_CHROME)
 	$(DOCKER) network connect synthetic-network $(CONTAINER_NAME_CHROME)
 	@echo
 	@echo "🎛 Synthetic network GUI will listen on http://localhost:3000"
